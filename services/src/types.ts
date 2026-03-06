@@ -5,7 +5,10 @@ export type EntryType =  {
       createdAt: string,
       author: string,
       title: string,
-      genre: string[],
-      serie: string,
-      serieNumber: string,
+      genre?: string[],
+      serie?: string,
+      serieNumber?: string,
 }
+
+
+

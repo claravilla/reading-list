@@ -7,7 +7,7 @@ import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import path from "path";
 
-export default class ReadingEntriesStack extends Stack {
+export default class ReadingServiceStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -17,13 +17,17 @@ export default class ReadingEntriesStack extends Stack {
         type: AttributeType.STRING,
         name: "id",
       },
+      sortKey: {
+        type: AttributeType.STRING,
+        name: "user",
+      },
     });
 
-    const lambda = new NodejsFunction(this, "getEntriesService", {
-      functionName: "get-entries-service",
+    const lambda = new NodejsFunction(this, "readingServiceHandler", {
+      functionName: "reading-service-handler",
       runtime: Runtime.NODEJS_22_X,
       timeout: Duration.seconds(10),
-      entry: path.join(__dirname, "../src/GetReadingEntriesService.ts"),
+      entry: path.join(__dirname, "../src/handler.ts"),
     });
 
     lambda.addToRolePolicy(
@@ -36,21 +40,33 @@ export default class ReadingEntriesStack extends Stack {
           "dynamodb:DeleteItem",
         ],
         resources: [entriesTable.tableArn],
-      })
+      }),
     );
 
     const apiIntegration = new HttpLambdaIntegration("apiIntegration", lambda);
 
-    const api = new HttpApi(this, "readingListApi");
+    const apiList = new HttpApi(this, "readingListApi");
 
-    api.addRoutes({
+    apiList.addRoutes({
       path: "/",
       methods: [HttpMethod.GET],
       integration: apiIntegration,
     });
 
+    apiList.addRoutes({
+      path: "/{username}",
+      methods: [HttpMethod.GET],
+      integration: apiIntegration,
+    });
+
+    apiList.addRoutes({
+      path: "/{username}",
+      methods: [HttpMethod.POST],
+      integration: apiIntegration,
+    });
+
     new CfnOutput(this, "apiURL", {
-      value: api.url as string,
+      value: apiList.url as string,
     });
   }
 }

@@ -1,5 +1,5 @@
 import { App } from "aws-cdk-lib";
-import ReadingEntriesStack from "./ReadingEntriesStack";
+import ReadingServiceStack from "./ReadingServiceStack";
 
 const environment = {
   account: process.env.ACCOUNT,
@@ -7,7 +7,7 @@ const environment = {
 };
 
 const app = new App();
-new  ReadingEntriesStack
-(app, "ReadingEntriesStack", {
+new  ReadingServiceStack
+(app, "ReadingServiceStack", {
   env: environment,
 });
