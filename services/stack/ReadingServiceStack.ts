@@ -65,7 +65,7 @@ export default class ReadingServiceStack extends Stack {
       integration: apiIntegration,
     });
 
-    new CfnOutput(this, "apiURL", {
+    new CfnOutput(this, "readingStackApiURL", {
       value: apiList.url as string,
     });
   }

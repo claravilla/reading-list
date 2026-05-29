@@ -13,7 +13,7 @@ export default class TextExtactServiceStack extends Stack {
     const lambda = new NodejsFunction(this, "textExtractServiceHandler", {
       functionName: "text-extract-service-handler",
       runtime: Runtime.NODEJS_22_X,
-      timeout: Duration.seconds(10),
+      timeout: Duration.seconds(60),
       entry: path.join(__dirname, "../src/textExtractService.ts"),
     });
 
@@ -29,7 +29,7 @@ export default class TextExtactServiceStack extends Stack {
     });
 
 
-    new CfnOutput(this, "apiURL", {
+    new CfnOutput(this, "textStackApiURL", {
       value: apiTextExtract.url as string,
     });
   }
