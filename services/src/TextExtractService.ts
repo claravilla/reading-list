@@ -2,33 +2,53 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { Jimp, JimpMime } from "jimp";
-import multipart from "lambda-multipart-parser";
-import { ConditionalOperator } from "@aws-sdk/client-dynamodb";
-import { parseDateDef } from "openai/_vendor/zod-to-json-schema/index.mjs";
 
 export const handler = async (event: any) => {
   if (!event.body) {
     return {
       statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+        "Access-Control-Allow-Methods": "OPTIONS,POST",
+      },
       body: "Body cannot be empty",
     };
   }
+  console.log("EVENT", event);
 
-  const pictureData = await multipart.parse(event);
-
-  const pictureFile = pictureData.files[0];
-
-  if (!pictureFile.content || pictureFile.content.length === 0) {
+  if (!event.isBase64Encoded) {
     return {
       statusCode: 400,
-      body: "Picture cannot be empty",
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+        "Access-Control-Allow-Methods": "OPTIONS,POST",
+      },
+      body: JSON.stringify({
+        message: "Event is not base64 encoded and cannot be consumed",
+      }),
     };
   }
 
-  let finalImageBase64 = pictureFile.content.toString("base64");
+  const pictureFile = Buffer.from(event.body, "base64");
+
+  if (!pictureFile || pictureFile.length === 0) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+        "Access-Control-Allow-Methods": "OPTIONS,POST",
+      },
+      body: JSON.stringify({ message: "Picture cannot be empty" }),
+    };
+  }
+
+  let finalImageBase64 = event.body;
 
   try {
-    const image = await Jimp.read(pictureFile.content);
+    const image = await Jimp.read(pictureFile);
 
     const width = image.bitmap.width;
     const height = image.bitmap.height;
@@ -40,9 +60,17 @@ export const handler = async (event: any) => {
       finalImageBase64 = resizedBuffer.toString("base64");
     }
   } catch (error) {
+    console.log("ERROR", error);
     return {
       statusCode: 500,
-      body: `Could not parse/resize image, ${error}`,
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+        "Access-Control-Allow-Methods": "OPTIONS,POST",
+      },
+      body: JSON.stringify({
+        message: `Could not parse/resize image, ${error}`,
+      }),
     };
   }
 
@@ -85,23 +113,50 @@ export const handler = async (event: any) => {
     if (!parsedResponse) {
       return {
         statusCode: 500,
-        body: "Could not parse OpenAi response",
+        headers: {
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Headers":
+            "Content-Type,Authorization,X-Api-Key",
+          "Access-Control-Allow-Methods": "OPTIONS,POST",
+        },
+        body: JSON.stringify({ message: "Could not parse OpenAi response" }),
       };
     }
 
     if (parsedResponse.message !== null) {
       return {
         statusCode: 400,
-        body: "Image provided is not a book cover",
+        headers: {
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Headers":
+            "Content-Type,Authorization,X-Api-Key",
+          "Access-Control-Allow-Methods": "OPTIONS,POST",
+        },
+        body: JSON.stringify({ message: "Image provided is not a book cover" }),
       };
     }
 
     const { message, ...result } = parsedResponse;
-    return result;
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+        "Access-Control-Allow-Methods": "OPTIONS,POST",
+      },
+      body: JSON.stringify(result),
+    };
   } catch (error) {
+    console.log("ERROR", error);
     return {
       statusCode: 500,
-      body: `Could not extract text, ${error}`,
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+        "Access-Control-Allow-Methods": "OPTIONS,POST",
+      },
+      body: JSON.stringify({ message: `Could not extract text, ${error}` }),
     };
   }
 };
