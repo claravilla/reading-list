@@ -1,25 +1,98 @@
-.add-entry-form {
-  display:flex;
-flex-direction: column;
-justify-content: center;
-align-items: baseline;
-  margin: 100px;
+body {
+  background-color: #093c5d;
+  margin: 20px 50px;
+}
+
+h3 {
+  color: #6fd1d7;
+  font-size: 1.5rem;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 input {
   border-radius: 5px;
   padding: 10px;
-  margin: 20px;
+  margin: 10px 0px;
   border: 1px solid black;
-  font-size:3rem
+  font-size: 1rem;
 }
 
-button {
+.add-entry-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: baseline;
+  margin: 20px 0px;
+}
+
+.add-entry-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: baseline;
+}
+
+.add-picture-buttons-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0px;
+  width: 150px;
+  height: 100px;
+}
+
+.take-picture-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.camera-form-button {
+  border-radius: 35px;
+  background-color: #5df8d8;
+  width: 70px;
+  height: 70px;
+}
+
+.file-picker {
+  max-width: 100px;
+  border-radius: 5px;
+  background-color: #5df8d8;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 1rem;
+  padding: 10px;
+  margin: 0px;
+}
+
+.form-button {
   border-radius: 10px;
   padding: 10px;
-  margin: 20px;
+  margin: 20px 0px;
   border: 1px solid black;
-  background-color: aquamarine;
+  background-color: #5df8d8;
   color: black;
-    font-size:3rem
+  font-size: 1rem;
+}
+
+.error-message {
+  color: red;
+  font-size: 3rem;
+}
+
+.hidden {
+  display: none;
+}
+
+.icon-btn {
+  background-color: #5df8d8;
+}
+
+.margin-left {
+  margin-left: 20px;
+}
+
+.camera-screen-section {
+  width: 325px;
+  height: 550px;
+  object-fit: cover;
 }
