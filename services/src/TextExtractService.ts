@@ -60,7 +60,6 @@ export const handler = async (event: any) => {
       finalImageBase64 = resizedBuffer.toString("base64");
     }
   } catch (error) {
-    console.log("ERROR", error);
     return {
       statusCode: 500,
       headers: {
