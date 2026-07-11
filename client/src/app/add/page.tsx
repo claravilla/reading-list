@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { PacmanLoader } from "react-spinners";
-import { createEntry} from "../api";
+import { createEntry } from "../api/add-page";
 import ImageSelector from "@/src/component/imageSelector";
+import css from "../globals.css"
 import classes from "./add.module.css";
 
 export default function AddEntryForm() {
@@ -84,7 +85,9 @@ export default function AddEntryForm() {
               Add Entry
             </button>
           </div>
-          {isError ? <div className={classes["error-message"]}>{errMsg}</div> : null}
+          {isError ? (
+            <div className="error-message">{errMsg}</div>
+          ) : null}
         </div>
       </>
     );

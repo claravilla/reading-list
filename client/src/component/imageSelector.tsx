@@ -2,8 +2,8 @@
 import { useRef, useState } from "react";
 import { Camera, CornerUpLeft, Paperclip } from "lucide-react";
 import ProcessingPictureLoader from "./processingPictureLoader";
-import { extractPicture } from "../app/api";
-import classes from "./image-selector.module.css";
+import { extractPicture } from "../app/api/add-page";
+import classes from "./css/image-selector.module.css";
 
 export default function ImageSelector({
   onInputChange,
