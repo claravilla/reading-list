@@ -1,5 +1,5 @@
 import { PacmanLoader } from "react-spinners";
-import classes from "./image-selector.module.css";
+import classes from "./css/image-selector.module.css";
 
 export default function ProcessingPictureLoader() {
   return (

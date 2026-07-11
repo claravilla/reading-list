@@ -8,9 +8,9 @@ const environment = {
 };
 
 const app = new App();
-// new ReadingServiceStack(app, "ReadingServiceStack", {
-//   env: environment,
-// });
+new ReadingServiceStack(app, "ReadingServiceStack", {
+  env: environment,
+});
 
 new TextExtactServiceStack(app, "TextExtractServiceStack", {
   env: environment,
