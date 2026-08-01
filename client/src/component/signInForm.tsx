@@ -2,6 +2,7 @@
 import { MouseEventHandler, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInUser } from "../app/api/access-page";
+import css from "../app//globals.css"
 import classes from "./css/access-section.module.css";
 import { PacmanLoader } from "react-spinners";
 
@@ -74,13 +75,13 @@ export default function SignInForm({
           ></input>
           <div className={classes["btn-section"]}>
             <button
-              className={classes["btn"]}
+              className="btn"
               onClick={handleSubmission}
               disabled={isDisabled}
             >
               Sign in
             </button>
-            <button className={classes["btn"]} onClick={onCancelFunction}>
+            <button className="btn" onClick={onCancelFunction}>
               Cancel
             </button>
           </div>

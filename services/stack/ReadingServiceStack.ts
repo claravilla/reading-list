@@ -2,12 +2,18 @@ import {
   App,
   CfnOutput,
   Duration,
+  Fn,
   RemovalPolicy,
   Stack,
   StackProps,
 } from "aws-cdk-lib";
-import { HttpApi, HttpMethod } from "aws-cdk-lib/aws-apigatewayv2";
-import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import {
+  ApiKey,
+  AuthorizationType,
+  CognitoUserPoolsAuthorizer,
+  LambdaIntegration,
+  RestApi,
+} from "aws-cdk-lib/aws-apigateway";
 import {
   AccountRecovery,
   ClientAttributes,
@@ -15,6 +21,7 @@ import {
   UserPool,
   UserPoolEmail,
 } from "aws-cdk-lib/aws-cognito";
+import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -24,91 +31,123 @@ export default class ReadingServiceStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const userServiceEmail = process.env.USER_SERVICE_EMAIL;
-    if (!userServiceEmail) {
-      throw new Error("User service email for Cognito User Pool missing");
-    }
+    // IMPORT USER POOL
 
-    const userPool = new UserPool(this, "readersUserPool", {
-      userPoolName: "Readers User Pool",
-      signInPolicy: {
-        allowedFirstAuthFactors: { password: true },
-      },
-      signInAliases: {
-        email: true,
-        username: false,
-      },
-      selfSignUpEnabled: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      passwordPolicy: {
-        minLength: 12,
-        requireLowercase: true,
-        requireUppercase: true,
-        requireDigits: true,
-        requireSymbols: true,
-        tempPasswordValidity: Duration.days(1),
-      },
-      accountRecovery: AccountRecovery.EMAIL_ONLY,
-      email: UserPoolEmail.withSES({
-        fromEmail: userServiceEmail,
-        fromName: "Reading List",
-      }),
-      keepOriginal: {
-        email: true,
-      },
-      customAttributes: {
-        name: new StringAttribute({ mutable: true }),
-      },
-    });
+    const userPoolArn = Fn.importValue("readingListUserPoolArn");
 
-    const clientWriteAttributes = new ClientAttributes().withStandardAttributes(
-      { email: true },
+    const userPool = UserPool.fromUserPoolArn(
+      this,
+      "readingListUserPool",
+      userPoolArn,
     );
 
-    const clientReadAttributes = clientWriteAttributes.withStandardAttributes({
-      email: true,
+    // DYNAMO DB
+
+    const table = new Table(this, "readingListTable", {
+      tableName: "reading-list-table",
+      partitionKey: {
+        name: "userId",
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: "id",
+        type: AttributeType.STRING,
+      },
+      removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    const readingAppUser = userPool.addClient("reading-list-app-client", {
-      userPoolClientName: "reading-list-app-client",
-      generateSecret: true,
-      enableTokenRevocation: true,
-      readAttributes: clientReadAttributes,
-      writeAttributes: clientWriteAttributes,
-      authFlows: { userPassword: true },
+    // LAMBDA HANLDER - One entry point for all routes
+
+    const lambda = new NodejsFunction(this, "readingServiceHandler", {
+      functionName: "reading-service-handler",
+      runtime: Runtime.NODEJS_22_X,
+      timeout: Duration.seconds(10),
+      entry: path.join(__dirname, "../src/handler.ts"),
     });
 
-    // const lambda = new NodejsFunction(this, "readingServiceHandler", {
-    //   functionName: "reading-service-handler",
-    //   runtime: Runtime.NODEJS_22_X,
-    //   timeout: Duration.seconds(10),
-    //   entry: path.join(__dirname, "../src/handler.ts"),
-    // });
+    // LAMBDA PERMISSION
 
-    // const apiIntegration = new HttpLambdaIntegration("apiIntegration", lambda);
+    const lambdaPolicy = new PolicyStatement({
+      actions: [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+      ],
+      resources: [table.tableArn],
+      effect: Effect.ALLOW,
+    });
 
-    // const apiList = new HttpApi(this, "readingListApi");
+    lambda.addToRolePolicy(lambdaPolicy);
 
-    // apiList.addRoutes({
-    //   path: "/",
-    //   methods: [HttpMethod.GET],
-    //   integration: apiIntegration,
-    // });
+    // REST API
+    const authoriser = new CognitoUserPoolsAuthorizer(
+      this,
+      "readinListAuthoriser",
+      {
+        cognitoUserPools: [userPool],
+      },
+    );
 
-    // apiList.addRoutes({
-    //   path: "/{username}",
-    //   methods: [HttpMethod.GET],
-    //   integration: apiIntegration,
-    // });
+    const apiIntegration = new LambdaIntegration(lambda);
 
-    // apiList.addRoutes({
-    //   path: "/{username}",
-    //   methods: [HttpMethod.POST],
-    //   integration: apiIntegration,
-    // });
+    const apiKey = new ApiKey(this, "readingListApiKey", {
+      apiKeyName: "readingListApiKey",
+    });
 
-    // new CfnOutput(this, "readingStackApiURL", {
-    //   value: apiList.url as string,
-    // });
+    const readingListApi = new RestApi(this, "readingListApi", {
+      restApiName: "readingListApi",
+      defaultCorsPreflightOptions: {
+        allowOrigins: ["http://localhost:3000"],
+        allowMethods: ["OPTIONS", "POST", "GET", "PUT", "DELETE"],
+      },
+      deploy: true,
+      defaultMethodOptions: {
+        authorizer: authoriser,
+        authorizationType: AuthorizationType.COGNITO,
+        apiKeyRequired: true,
+      },
+    });
+
+    const apiKeyPlan = readingListApi.addUsagePlan("UsagePlan", {
+      name: "readingListApiUsagePlan",
+      throttle: {
+        rateLimit: 10,
+        burstLimit: 2,
+      },
+    });
+
+    apiKeyPlan.addApiKey(apiKey);
+
+    apiKeyPlan.addApiStage({
+      api: readingListApi,
+      stage: readingListApi.deploymentStage,
+    });
+
+    // FETCH ALL ENTRIES
+
+    readingListApi.root.addMethod("GET", apiIntegration, {});
+
+    // USER ROUTE
+
+    const userRoute = readingListApi.root.addResource("{userId}");
+    userRoute.addMethod("GET", apiIntegration, {});
+
+    userRoute.addMethod("POST", apiIntegration, {});
+
+    // ENTRY ROUTE
+
+    const entryRoute = userRoute.addResource("{entryId}");
+
+    entryRoute.addMethod("GET", apiIntegration, {});
+
+    entryRoute.addMethod("PUT", apiIntegration, {});
+
+    entryRoute.addMethod("DELETE", apiIntegration, {});
+
+    new CfnOutput(this, "readingStackApiURL", {
+      value: readingListApi.url as string,
+    });
   }
 }

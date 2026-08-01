@@ -1,12 +1,15 @@
 "use client";
 import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { PacmanLoader } from "react-spinners";
-import { createEntry } from "../api/add-page";
+import { createEntry } from "../../api/add-page";
 import ImageSelector from "@/src/component/imageSelector";
-import css from "../globals.css"
+import css from "../globals.css";
 import classes from "./add.module.css";
 
 export default function AddEntryForm() {
+  const router = useRouter();
+  const { userId } = useParams<{ userId: string }>();
   const [title, setTitle] = useState<string>("");
   const [author, setAuthor] = useState<string>("");
   const [imageToUpload, setImageToUpload] = useState<File | null>(null);
@@ -51,6 +54,23 @@ export default function AddEntryForm() {
     }
   };
 
+  const handleAddEntrySubmission = async () => {
+    const payload = {
+      author: author,
+      title: title,
+      userId: userId,
+    };
+
+    const results = await createEntry(payload);
+    if (results.message) {
+      setErrMsg(results.message);
+      setIsError(true);
+      setIsLoading(false);
+    } else {
+      router.push(`/${userId}`);
+    }
+  };
+
   if (!isLoading) {
     return (
       <>
@@ -81,13 +101,14 @@ export default function AddEntryForm() {
               onChange={handleInputChange}
             ></input>
 
-            <button className={classes["form-button"]} onClick={createEntry}>
+            <button
+              className={classes["form-button"]}
+              onClick={handleAddEntrySubmission}
+            >
               Add Entry
             </button>
           </div>
-          {isError ? (
-            <div className="error-message">{errMsg}</div>
-          ) : null}
+          {isError ? <div className="error-message">{errMsg}</div> : null}
         </div>
       </>
     );
