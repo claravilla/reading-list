@@ -1,6 +1,7 @@
 import { App } from "aws-cdk-lib";
 import ReadingServiceStack from "./ReadingServiceStack";
 import TextExtactServiceStack from "./TextExtractServiceStack";
+import CognitoStack from "./CognitoStack";
 
 const environment = {
   account: process.env.ACCOUNT,
@@ -8,6 +9,10 @@ const environment = {
 };
 
 const app = new App();
+
+new CognitoStack(app, "CognitoStack", {
+  env: environment
+})
 new ReadingServiceStack(app, "ReadingServiceStack", {
   env: environment,
 });

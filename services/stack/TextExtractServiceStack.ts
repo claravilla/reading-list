@@ -1,5 +1,12 @@
-import { App, CfnOutput, Duration, Stack, StackProps } from "aws-cdk-lib";
-import { ApiKey, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { App, CfnOutput, Duration, Fn, Stack, StackProps } from "aws-cdk-lib";
+import {
+  ApiKey,
+  AuthorizationType,
+  CognitoUserPoolsAuthorizer,
+  LambdaIntegration,
+  RestApi,
+} from "aws-cdk-lib/aws-apigateway";
+import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import path from "path";
@@ -15,9 +22,27 @@ export default class TextExtactServiceStack extends Stack {
       entry: path.join(__dirname, "../src/textExtractService.ts"),
     });
 
+    // IMPORT USER POOL
+
+    const userPoolArn = Fn.importValue("readingListUserPoolArn");
+
+    const userPool = UserPool.fromUserPoolArn(
+      this,
+      "readingListUserPool",
+      userPoolArn,
+    );
+
     // ------------------------------------
     // REST API
     // ------------------------------------
+
+    const authoriser = new CognitoUserPoolsAuthorizer(
+      this,
+      "readinListAuthoriser",
+      {
+        cognitoUserPools: [userPool],
+      },
+    );
 
     const apiIntegration = new LambdaIntegration(lambda);
 
@@ -32,6 +57,12 @@ export default class TextExtactServiceStack extends Stack {
         allowMethods: ["OPTIONS", "POST"],
       },
       binaryMediaTypes: ["image/*", "multipart/form-data"],
+      deploy: true,
+      defaultMethodOptions: {
+        authorizer: authoriser,
+        authorizationType: AuthorizationType.COGNITO,
+        apiKeyRequired: true,
+      },
     });
 
     const apiKeyPlan = textExtractApi.addUsagePlan("UsagePlan", {

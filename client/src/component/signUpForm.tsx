@@ -42,7 +42,11 @@ export default function SignUpForm({
   };
 
   const handleConfirmedPassword = () => {
-    if (password.length >= 12 && password === confirmPassword) {
+    if (password.length <12) {
+        setErrorMsg("Password must be 12 character long")
+        return
+    }
+    if (password === confirmPassword) {
       setErrorMsg("");
       setIsDisabled(false);
     } else {
@@ -95,13 +99,13 @@ export default function SignUpForm({
           ></input>
           <div className={classes["btn-section"]}>
             <button
-              className={classes["btn"]}
+              className="btn"
               disabled={isDisabled}
               onClick={handleSubmission}
             >
               Submit
             </button>
-            <button className={classes["btn"]} onClick={onCancelFunction}>
+            <button className="btn" onClick={onCancelFunction}>
               Cancel
             </button>
           </div>

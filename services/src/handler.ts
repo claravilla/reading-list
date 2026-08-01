@@ -1,31 +1,56 @@
-import CreateNewEntryService from "./CreateNewEntryService";
-import GetReadingEntriesService from "./GetReadingEntriesService";
+import { createUserEntry, getUserEntries } from "./UserEntriesService";
 
-export const handler = async (event: any) =>{
+export const handler = async (event: any) => {
   // extract method and url
 
-  console.log("REQUEST", event)
+  console.log("REQUEST", event);
 
-  const method = event.requestContext.http.method;
-//   const body = event.body;
-  const user = event.pathParameters?.username;
-  console.log("USER", user)
-//   const path = event.path;
-//   //return correct service
+  const method = event.requestContext.httpMethod;
+  const body = event.body;
+  const userId = event.pathParameters?.userId;
+  const entryId = event.pathParameters?.entryId;
 
-//   console.log("METHOD", method)
-//   console.log("USER", user)
-//   console.log("PATH", path)
-//   console.log("METHOD", method)
+  if (!userId) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+        "Access-Control-Allow-Methods": "DELETE,GET,OPTIONS,POST,PUT",
+      },
+      body: JSON.stringify({ message: "Validation error: userId is required" }),
+    };
+  }
 
-//   if (method === "GET" && user !== undefined) {
-//     return GetReadingEntriesService(user);
-//   }
+  if (method === "GET") {
+    return getUserEntries(userId);
+  }
 
-//   if (method === "POST" && body != null && user != null) {
-//     return CreateNewEntryService(body, user);
-//   }
+  if (method === "POST") {
+    if (!body) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Headers":
+            "Content-Type,Authorization,X-Api-Key",
+          "Access-Control-Allow-Methods": "DELETE,GET,OPTIONS,POST,PUT",
+        },
+        body: JSON.stringify({
+          message: "Validation error: cannot POST an empty body",
+        }),
+      };
+    }
+    return createUserEntry(body, userId);
+  }
 
-  return "this works"
+  return {
+    statusCode: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+      "Access-Control-Allow-Methods": "DELETE,GET,OPTIONS,POST,PUT",
+    },
+    body: JSON.stringify({ message: "This works" }),
+  };
 };
-
