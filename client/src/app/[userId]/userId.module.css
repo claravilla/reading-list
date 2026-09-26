@@ -1,4 +1,20 @@
-.cta-btn-section {
-   margin: 20px 0px;
-   text-align: left;
+.cta-btn-section-left {
+  text-align: left;
+}
+.cta-btn-section-center {
+  text-align: center;
+}
+
+.header-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-section-element-one {
+  flex: 1;
+}
+
+.h2-align {
+   text-align: center;
 }

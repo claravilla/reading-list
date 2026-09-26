@@ -23,6 +23,12 @@ h1 {
   text-align: center;
 }
 
+h2 {
+  color: #6fd1d7;
+  font-size: 2rem;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
 h3 {
   color: #6fd1d7;
   font-size: 1.5rem;

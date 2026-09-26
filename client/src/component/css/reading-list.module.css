@@ -1,0 +1,26 @@
+.reading-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-items: left;
+  margin-top: 50px;
+}
+
+.reading-entry {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: left;
+  background-color: #6fd1d7;
+  margin: 10px;
+  border-radius: 5px;
+  border: 2px solid #093c5d;
+  padding: 5px;
+  width: 50%;
+}
+
+.reading-entry-field {
+  color: #093c5d;
+  margin: 5px;
+}
+

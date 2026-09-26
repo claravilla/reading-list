@@ -2,9 +2,10 @@
 import { MouseEventHandler, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInUser } from "../app/api/access-page";
-import css from "../app//globals.css"
+import css from "../app//globals.css";
 import classes from "./css/access-section.module.css";
 import { PacmanLoader } from "react-spinners";
+import ShowPassword from "./showPassword";
 
 export default function SignInForm({
   onCancelFunction,
@@ -17,6 +18,7 @@ export default function SignInForm({
   const [isDisabled, setIsDisabled] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [passwordType, setPasswordType] = useState<string>("password");
 
   const handleInputChange = (event: any) => {
     if (event.target.id === "email") {
@@ -65,7 +67,7 @@ export default function SignInForm({
             onBlur={handleOnBlur}
           ></input>
           <input
-            type="password"
+            type={passwordType}
             id="password"
             name="password"
             value={password}
@@ -73,6 +75,7 @@ export default function SignInForm({
             onChange={handleInputChange}
             onBlur={handleOnBlur}
           ></input>
+          <ShowPassword onCheckbox={setPasswordType} />
           <div className={classes["btn-section"]}>
             <button
               className="btn"

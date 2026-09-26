@@ -5,6 +5,7 @@ import { createUser } from "../app/api/access-page";
 import css from "../app/globals.css";
 import classes from "./css/access-section.module.css";
 import { PacmanLoader } from "react-spinners";
+import ShowPassword from "./showPassword";
 
 export default function SignUpForm({
   onCancelFunction,
@@ -18,6 +19,9 @@ export default function SignUpForm({
   const [isDisabled, setIsDisabled] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [passwordType, setPasswordType] = useState<string>("password");
+
   const handleInputChange = (event: any) => {
     if (event.target.id === "email") {
       setEmail(event.target.value);
@@ -42,9 +46,9 @@ export default function SignUpForm({
   };
 
   const handleConfirmedPassword = () => {
-    if (password.length <12) {
-        setErrorMsg("Password must be 12 character long")
-        return
+    if (password.length < 12) {
+      setErrorMsg("Password must be 12 character long");
+      return;
     }
     if (password === confirmPassword) {
       setErrorMsg("");
@@ -80,7 +84,7 @@ export default function SignUpForm({
           ></input>
 
           <input
-            type="password"
+            type={passwordType}
             id="password"
             name="password"
             value={password}
@@ -89,7 +93,7 @@ export default function SignUpForm({
             minLength={12}
           ></input>
           <input
-            type="password"
+            type={passwordType}
             id="confirmPassword"
             name="confirmPassword"
             value={confirmPassword}
@@ -97,6 +101,7 @@ export default function SignUpForm({
             onChange={handleInputChange}
             onBlur={handleConfirmedPassword}
           ></input>
+          <ShowPassword onCheckbox={setPasswordType} />
           <div className={classes["btn-section"]}>
             <button
               className="btn"
@@ -112,7 +117,7 @@ export default function SignUpForm({
           {errorMsg !== "" ? <p className="error-message">{errorMsg}</p> : null}
         </div>
       )}
-      {isLoading && <PacmanLoader />}
+      {isLoading && <PacmanLoader color="#5df8d8" />}
     </>
   );
 }
