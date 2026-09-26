@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PacmanLoader } from "react-spinners";
-import { createEntry } from "../../api/add-page";
+import { createEntry } from "../../api/user-page";
 import ImageSelector from "@/src/component/imageSelector";
 import css from "../globals.css";
 import classes from "./add.module.css";

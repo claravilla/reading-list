@@ -2,6 +2,8 @@
 import {
   AdminConfirmSignUpCommand,
   AdminConfirmSignUpCommandInput,
+  AdminDeleteUserCommand,
+  AdminUpdateUserAttributesCommand,
   CognitoIdentityProviderClient,
   GlobalSignOutCommand,
   GlobalSignOutCommandInput,
@@ -16,6 +18,7 @@ import { extractAccessToken, extractIdToken } from "./utils";
 
 const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
 const clientSecret = process.env.NEXT_PUBLIC_COGNITO_CLIENT_SECRET;
+const cognitoPoolId = process.env.NEXY_PUBLIC_USER_POOL_ID;
 
 if (!clientId || !clientSecret) {
   throw new Error("Missing Cognito Credentials");
@@ -40,8 +43,12 @@ export const createUser = async (email: string, password: string) => {
     await client.send(command);
     console.log("User created");
     await verifyUser(email);
+    console.log("User verified");
+    await verifyEmail(email);
+    console.log("Email created");
     return await signInUser(email, password);
   } catch (error) {
+    // await deleteUser(email);
     throw new Error(`Could not create user ${error}`);
   }
 };
@@ -118,7 +125,22 @@ const verifyUser = async (username: string) => {
     console.log("User verified");
     return;
   } catch (error) {
+    console.log(`Could not verify user ${error}`);
     throw new Error(`Could not verify user ${error}`);
+  }
+};
+
+const verifyEmail = async (username: string) => {
+  const input = {
+    UserPoolId: process.env.NEXY_PUBLIC_USER_POOL_ID,
+    Username: username,
+    UserAttributes: [{ Name: "email_verified", Value: "true" }],
+  };
+  try {
+    await client.send(new AdminUpdateUserAttributesCommand(input));
+  } catch (error) {
+    console.log(`Could not verify email for user ${error}`);
+    throw new Error(`Could not verify email for user ${error}`);
   }
 };
 
@@ -139,5 +161,18 @@ export const logoutUser = async () => {
   } catch (error) {
     console.log();
     throw new Error(`Could not log out user ${error}`);
+  }
+};
+
+export const deleteUser = async (email: string) => {
+  const input = {
+    UserPoolId: cognitoPoolId,
+    Username: email,
+  };
+  const command = new AdminDeleteUserCommand(input);
+  try {
+    await client.send(command);
+  } catch (error) {
+    throw new Error(`Could not delete user ${error}`);
   }
 };

@@ -1,28 +1,19 @@
 "use server";
 import axios from "axios";
-import { buildAuthHeader, extractIdToken } from "./utils";
+import { buildAuthHeader } from "./utils";
+import {
+  ClientCreateEntryDataType,
+  ServerCreateEntryDataType,
+  textExtractEntryType,
+} from "@/src/types";
 
-type textExtractEntry = {
-  title: string;
-  author: string;
-};
-
-type ClientCreateEntryData = {
-  title: string;
-  author: string;
-  userId: string;
-};
-
-type ServerCreateEntryData = {
-  title: string;
-  author: string;
-};
+// CREATE NEW ENTRY
 
 export const createEntry = async (
-  entry: ClientCreateEntryData,
+  entry: ClientCreateEntryDataType,
 ): Promise<any | { message: string }> => {
   const { userId, author, title } = entry;
-  const payload: ServerCreateEntryData = {
+  const payload: ServerCreateEntryDataType = {
     author: author,
     title: title,
   };
@@ -51,7 +42,7 @@ export const createEntry = async (
 export const textExtract = async (
   image: File,
   type: string,
-): Promise<textExtractEntry> => {
+): Promise<textExtractEntryType> => {
   const url = process.env.NEXT_PUBLIC_TEXT_EXTRACT_API_URL || "";
   const apiKey = process.env.NEXT_PUBLIC_TEXT_EXTRACT_API_KEY || "";
 
@@ -83,5 +74,29 @@ export const extractPicture = async (
       message = error.response?.data?.message;
     }
     return { message: `Could not process your picture: ${message}` };
+  }
+};
+
+export const getAllUserEntries = async (userId: string) => {
+  const url = process.env.NEXT_PUBLIC_READING_LIST_API_URL || "";
+  const apiKey = process.env.NEXT_PUBLIC_READING_LIST_API_KEY || "";
+
+  try {
+    const header = await buildAuthHeader();
+    const result = await axios.get(`${url}/${userId}`, {
+      headers: {
+        "X-Api-Key": apiKey,
+        "Content-Type": "application/json",
+        Authorization: header,
+      },
+    });
+    console.log("DATA", result.data)
+    return result.data;
+  } catch (error) {
+    let message = "Could not get reading list";
+    if (axios.isAxiosError(error)) {
+      message = error.response?.data?.message;
+    }
+    throw new Error(`Could not get reading list: ${message}`);
   }
 };

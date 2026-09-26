@@ -1,33 +1,77 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CTALink from "../../component/ctaLink";
 import classes from "./userId.module.css";
 import { logoutUser } from "../api/access-page";
+import { getAllUserEntries } from "../api/user-page";
+import ReadingList from "@/src/component/readingList";
+import { ReadingEntryType } from "@/src/types";
+import { PacmanLoader } from "react-spinners";
 
 export default function UserHomePage() {
   const { userId } = useParams<{ userId: string }>();
+  const displayId = userId.split("-")[0];
   const router = useRouter();
-  const [message, setMessage] = useState<string>("");
+  const [errMessage, setErrMessage] = useState<string>("");
+  const [entries, setEntries] = useState<ReadingEntryType[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    getAllUserEntries(userId)
+      .then((data) => {
+        setEntries(data);
+        setIsLoading(false);
+        console.log(data);
+      })
+      .catch((error) => {
+        setErrMessage(error.message);
+        setIsLoading(false);
+      });
+  }, []);
+
+  const ctaClass =
+    entries.length != 0 ? "cta-btn-section-left" : "cta-btn-section-center";
 
   const handleLogout = async () => {
     try {
       await logoutUser();
       router.push("/");
     } catch (error) {
-      setMessage("Could not log out");
+      setErrMessage("Could not log out");
     }
   };
   return (
     <>
-      <h1>WELCOME {userId}</h1>
-      <button className="btn" onClick={handleLogout}>
-        Log out
-      </button>
-      <div className={classes["cta-btn-section"]}>
-        <CTALink link={`/add/${userId}`} text="Add Entry" />
+      <div className={classes["header-section"]}>
+        <h1 className={classes["header-section-element-one"]}>
+          WELCOME {displayId}
+        </h1>
+        <button className="btn" onClick={handleLogout}>
+          Log out
+        </button>
       </div>
-      {message != "" ? <div className="error-message">{message}</div> : null}
+      {isLoading && <PacmanLoader color="#5df8d8" />}
+      {!isLoading && (
+        <div>
+          {entries.length != 0 && errMessage === "" && (
+            <div>
+              <div className={classes[ctaClass]}>
+                <CTALink link={`/add/${userId}`} text="Add Entry" />
+              </div>
+              <ReadingList entries={entries} />
+            </div>
+          )}
+          {entries.length === 0 && errMessage === "" && (
+            <h2 className={classes["h2-align"]}>
+              Your list is empty, start adding!
+            </h2>
+          )}
+          {errMessage != "" ? (
+            <div className="error-message">{errMessage}</div>
+          ) : null}
+        </div>
+      )}
     </>
   );
 }

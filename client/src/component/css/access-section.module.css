@@ -15,3 +15,14 @@
   align-items: center;
   justify-content: left;
 }
+
+.show-password {
+  color: white;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.checkbox {
+  margin-left: 5px;
+}
